@@ -4,22 +4,41 @@ from settings import *
 #from player import Player
 from sprite import SpriteObject
 from rays import ray_casting_walls
-from level1 import collision_walls, world_map
+from level1 import collision_walls, world_map, matrix_map
 #from drawing import Drawing
 
 
 class Barrel(SpriteObject):
-    def __init__(self, x, y):
+    def __init__(self, x, y, scale, sh, side):
         super().__init__({
                 'sprite': pygame.image.load('sprites/barrel/base/0.png').convert_alpha(),
                 'viewing_angles': None,
-                'shift': 1.8,
-                'scale': 0.4,
+                'shift': sh,
+                'scale': scale,
                 'animation': deque(
                     [pygame.image.load(f'sprites/barrel/anim/{i}.png').convert_alpha() for i in range(12)]),
                 'animation_dist': 800,
                 'animation_speed': 10,
                 'blocked': True,
+                'side': side,
+                'anim_dir': 1
+            }, (x, y))
+
+
+class Enemy(SpriteObject):
+    def __init__(self, x, y, scale, sh, side):
+        super().__init__({
+                'sprite': pygame.image.load('sprites/enemy/base/0.png').convert_alpha(),
+                'viewing_angles': None,
+                'shift': sh,
+                'scale': scale,
+                'animation': deque(
+                    [pygame.image.load(f'sprites/enemy/attack/{i}.png').convert_alpha() for i in range(1, 6)]),
+                'animation_dist': 800,
+                'animation_speed': 20,
+                'blocked': True,
+                'side': side,
+                'anim_dir': -1
             }, (x, y))
 
 
@@ -40,8 +59,7 @@ def detect_collision(dx, dy, rect):
                 delta_y += next_rect.bottom - hit_rect.top
             else:
                 delta_y += hit_rect.bottom - next_rect.top
-
-        if abs(delta_x - delta_y) < 20:
+        if abs(delta_x - delta_y) < 50:
             dx, dy = 0, 0
         elif delta_x > delta_y:
             dy = 0
@@ -58,13 +76,16 @@ sc = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.mouse.set_visible(False)
 
 all_spr = [
-    Barrel(7.1, 2.1),
-    Barrel(5.9, 2.1)
+    Barrel(7.1, 2.1, 0.4, 1.8, 40),
+    Barrel(5.9, 2.1, 0.4, 1.8, 40),
+    Barrel(1.2, 1.2, 0.6, 1, 60),
+    Enemy(6.5, 2.1, 1.2, -0.1, 40)
 ]
 
-#sprites = Sprites()
+# sprites = Sprites()
 clock = pygame.time.Clock()
 x, y = player_pos
+# print(x, y)
 
 rect = pygame.Rect(*player_pos, SIDE, SIDE)
 collision_sprites = [pygame.Rect(*obj.pos, obj.side, obj.side) for obj in
@@ -74,12 +95,14 @@ collision_list = collision_walls + collision_sprites
 #player = Player(sprites)
 #drawing = Drawing(sc, sc_map)
 
-textures = {#1: pygame.image.load('img/wall3.png').convert(),
-            2: pygame.image.load('img/wall4.png').convert(),
+textures = {1: pygame.image.load('img/wall3.png').convert(),
+            2: pygame.image.load('img/wall_2_2.png').convert(),
             #3: pygame.image.load('img/wall5.png').convert(),
             #4: pygame.image.load('img/wall6.png').convert(),
             'S': pygame.image.load('img/sky2.png').convert()
             }
+
+min_map_col = {2: BLACK, False: WHITE}
 
 while True:
     for event in pygame.event.get():
@@ -142,6 +165,13 @@ while True:
     # drawing.world(walls + [obj.object_locate(x, y, player_angle) for obj in all_spr])
     # drawing.fps(clock)
     # drawing.mini_map(player)
-
+    for e in range(len(matrix_map[0])):
+        for j in range(len(matrix_map)):
+            pygame.draw.rect(sc, min_map_col[matrix_map[j][e]], (WIDTH - 10 * len(matrix_map[0]) + 10 * e,
+                                                                 10 * j, 10, 10), 0)
+            #pygame.draw.re
+    pygame.draw.rect(sc, GRAY, (WIDTH + int(x / TILE) * 10 - 10 * len(matrix_map[0]), int(y / TILE) * 10, 10, 10), 0)
+    #print((int(x / TILE) * 10, int(y / TILE) * 10, 10, 10))
+    #print(WIDTH + int(x / TILE) * 10 - 10 * len(matrix_map[0]), int(y / TILE) * 10)
     pygame.display.flip()
     clock.tick(FPS)
