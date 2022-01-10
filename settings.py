@@ -37,15 +37,19 @@ TEXTURE_HEIGHT = 1200
 TEXTURE_SCALE = TEXTURE_WIDTH // TILE // GRAPHICS
 
 # player settings
-player_pos = (HALF_WIDTH // 4, HALF_HEIGHT - 50)
+player_pos = (2.5 * TILE, 1.5 * TILE)
+print(player_pos, HALF_WIDTH, HALF_HEIGHT)
 player_angle = 0
 player_speed = 2.5
 SENS = 0.004
 SIDE = 50
 
+DAMAGE = 50
+
 # colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+GRAY = (128, 128, 128)
 RED = (220, 0, 0)
 GREEN = (0, 80, 0)
 BLUE = (0, 0, 255)

@@ -12,8 +12,9 @@ class SpriteObject:
         self.animation = parameters['animation'].copy()
         self.animation_dist = parameters['animation_dist']
         self.animation_speed = parameters['animation_speed']
+        self.anim_dir = parameters['anim_dir']
         self.blocked = parameters['blocked']
-        self.side = 30
+        self.side = parameters["side"]
         self.animation_count = 0
         self.x, self.y = pos[0] * TILE, pos[1] * TILE
         self.pos = self.x - self.side // 2, self.y - self.side // 2
@@ -58,7 +59,7 @@ class SpriteObject:
                 if self.animation_count < self.animation_speed:
                     self.animation_count += 1
                 else:
-                    self.animation.rotate()
+                    self.animation.rotate(self.anim_dir)
                     self.animation_count = 0
 
             # sprite scale and pos
