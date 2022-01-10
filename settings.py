@@ -44,6 +44,8 @@ player_speed = 2.5
 SENS = 0.004
 SIDE = 50
 
+DAMAGE = 50
+
 # colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
