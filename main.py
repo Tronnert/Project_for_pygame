@@ -149,6 +149,39 @@ def detect_collision(dx, dy, rect):
     # self.y += dy
 
 
+def menu():
+    pygame.mouse.set_visible(True)
+    text1 = font.render("Начать", True, (255, 255, 255))
+    text2 = font.render("Статистика", True, (255, 255, 255))
+    text3 = font.render("Выйти", True, (255, 255, 255))
+    anim = deque([pygame.image.load(f'sprites/pedestal/anim/{i}.png').convert_alpha() for i in range(1, 7)])
+    a = 0
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                exit()
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_ESCAPE]:
+            exit()
+        click = pygame.mouse.get_pressed()
+        if click[0]:
+            break
+        a += 1
+        if a > 4:
+            anim.rotate(-1)
+            a = 0
+        sc.fill(BLACK)
+        sc.blit(text1, (100, 100))
+        sc.blit(text2, (100, 200))
+        sc.blit(text3, (100, 300))
+        sc.blit(pygame.transform.scale(anim[0], (66 * 4, 103 * 4)), (400, 200))
+        sc.blit(pygame.transform.scale(anim[0], (66 * 4, 103 * 4)), (700, 200))
+        sc.blit(pygame.transform.scale(anim[0], (66 * 4, 103 * 4)), (1000, 200))
+        pygame.display.flip()
+        clock.tick(FPS)
+    pygame.mouse.set_visible(False)
+
+
 pygame.init()
 sc = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.mouse.set_visible(False)
@@ -184,10 +217,15 @@ textures = {1: pygame.image.load('img/wall3.png').convert(),
             'S': pygame.image.load('img/sky2.png').convert()
             }
 
+font = pygame.font.SysFont('arial', 50)
+
 min_map_col = {2: BLACK, False: WHITE}
 
 attack_loc = 60
 max_attacl_loc = attack_loc
+attack_loc -= 1
+
+menu()
 
 while True:
     for event in pygame.event.get():
