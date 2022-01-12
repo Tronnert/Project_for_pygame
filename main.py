@@ -50,6 +50,7 @@ class Enemy(SpriteObject):
         self.go_death = False
         self.death = False
         self.an = 0
+        self.rect = pygame.Rect(self.x, self.y, self.side, self.side)
 
     def attacked(self, dam):
         if not self.go_death:
@@ -72,6 +73,9 @@ class Enemy(SpriteObject):
         if self.death:
             return (False,)
         return super().object_locate(x, y, angle)
+
+    def move(self, pos):
+        print(pos)
 
 
 class Ball(SpriteObject):
@@ -103,7 +107,7 @@ class Ball(SpriteObject):
         #print(next_rect)
         hit_indexes = next_rect.collidelistall(collision_list)
         if len(hit_indexes):
-            print(hit_indexes, blocked)
+            #print(hit_indexes, blocked)
             for hit_index in hit_indexes:
                 if hit_index > len(collision_walls) - 1:
                     if isinstance(blocked[hit_index - len(collision_walls)], Enemy):
@@ -149,15 +153,55 @@ def detect_collision(dx, dy, rect):
     # self.y += dy
 
 
+def menu():
+    pygame.mouse.set_visible(True)
+    # text1 = font.render("Начать", True, (255, 255, 255))
+    # text2 = font.render("Статистика", True, (255, 255, 255))
+    # text3 = font.render("Выйти", True, (255, 255, 255))
+    anim = deque([pygame.image.load(f'sprites/pedestal/anim/{i}.png').convert_alpha() for i in range(1, 7)])
+    x, y = 100, 100
+    rects_of_butt = [pygame.Rect(x, y + e * 100, 160, 40) for e in range(1, 4)]
+    a = 0
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                exit()
+        keys = pygame.key.get_pressed()
+        click = pygame.mouse.get_pressed()
+        if click[0]:
+            hit_indexes = pygame.Rect(*pygame.mouse.get_pos(), 1, 1).collidelistall(rects_of_butt)
+            if hit_indexes:
+                if hit_indexes[0] == 0:
+                    pygame.mouse.set_pos(HALF_WIDTH, HALF_WIDTH)
+                    break
+                if hit_indexes[0] == 2:
+                    exit()
+        a += 1
+        if a > 4:
+            anim.rotate(-1)
+            a = 0
+        sc.fill(DARKGRAY)
+        for e in range(1, 4):
+            sc.blit(textures['butt' + str(e)], (x, y + 100 * e))
+
+        sc.blit(pygame.transform.scale(anim[0], (66 * 4, 103 * 4)), (300, 200))
+        sc.blit(pygame.transform.scale(anim[0], (66 * 4, 103 * 4)), (600, 200))
+        sc.blit(pygame.transform.scale(anim[0], (66 * 4, 103 * 4)), (900, 200))
+        pygame.display.flip()
+        clock.tick(FPS)
+    pygame.mouse.set_visible(False)
+
+
 pygame.init()
 sc = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.mouse.set_visible(False)
 
 barrels = [
-    Barrel(7.1, 2.1, 0.4, 1.8, 40),
-    Barrel(5.9, 2.1, 0.4, 1.8, 40),
-    Barrel(1.2, 1.2, 0.6, 1, 60),]
-enemies = [Enemy(6.5, 2.1, 1.2, -0.1, 40)]
+    # Barrel(7.1, 2.1, 0.4, 1.8, 40),
+    # Barrel(5.9, 2.1, 0.4, 1.8, 40),
+    # Barrel(1.2, 1.2, 0.6, 1, 60),
+]
+enemies = [Enemy(6.5, 2.1, 1.2, -0.1, 60)]
 
 balls = []
 
@@ -181,13 +225,21 @@ textures = {1: pygame.image.load('img/wall3.png').convert(),
             2: pygame.image.load('img/wall_2_2.png').convert(),
             #3: pygame.image.load('img/wall5.png').convert(),
             #4: pygame.image.load('img/wall6.png').convert(),
-            'S': pygame.image.load('img/sky2.png').convert()
+            'S': pygame.image.load('img/sky2.png').convert(),
+            'butt1': pygame.image.load('img/butt1.png').convert(),
+            'butt2': pygame.image.load('img/butt2.png').convert(),
+            'butt3': pygame.image.load('img/butt3.png').convert(),
             }
+
+font = pygame.font.SysFont('arial', 50)
 
 min_map_col = {2: BLACK, False: WHITE}
 
 attack_loc = 60
 max_attacl_loc = attack_loc
+attack_loc -= 1
+
+menu()
 
 while True:
     for event in pygame.event.get():
@@ -198,7 +250,8 @@ while True:
     keys = pygame.key.get_pressed()
     dx, dy = 0, 0
     if keys[pygame.K_ESCAPE]:
-        exit()
+        menu()
+        attack_loc = max_attacl_loc - 1
     if keys[pygame.K_w]:
         dx = player_speed * cos_a
         dy = player_speed * sin_a
@@ -253,7 +306,9 @@ while True:
     pygame.draw.rect(sc, DARKGRAY, (0, HALF_HEIGHT, WIDTH, HALF_HEIGHT))
     # drawing.background(player.angle)
     walls = ray_casting_walls((x, y), player_angle, textures, world_map)
-    for obj in sorted(walls + [obj.object_locate(x, y, player_angle) for obj in all_spr + balls], key=lambda n: n[0], reverse=True):
+    located = [obj.object_locate(x, y, player_angle) for obj in all_spr + balls]
+    #print(walls)
+    for obj in sorted(walls + located, key=lambda n: n[0], reverse=True):
         if obj[0]:
             _, object, object_pos = obj
             sc.blit(object, object_pos)
@@ -268,6 +323,16 @@ while True:
     pygame.draw.rect(sc, GRAY, (WIDTH + int(x / TILE) * 10 - 10 * len(matrix_map[0]), int(y / TILE) * 10, 10, 10), 0)
     for e in balls:
         e.move()
+    # all_spr = [e for e in all_spr if not e.death]
+    # balls = [e for e in balls if not e.death]
+    # #print(all_spr)
+    # walls_rect = [e[1].get_rect().move(*e[2]) for e in walls]
+    # for e in range(len(all_spr)):
+    #     if isinstance(all_spr[e], Enemy):
+    #         if located[e][0]:
+    #             print(located[e][1].get_rect().move(*located[e][2]), walls_rect)
+    #             if len(located[e][1].get_rect().move(*located[e][2]).collidelistall(walls_rect)) == 0 and 0 <= :
+    #                 all_spr[e].move(player_pos)
     #print((int(x / TILE) * 10, int(y / TILE) * 10, 10, 10))
     #print(WIDTH + int(x / TILE) * 10 - 10 * len(matrix_map[0]), int(y / TILE) * 10)
     pygame.display.flip()
