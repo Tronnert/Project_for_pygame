@@ -1,6 +1,6 @@
 from settings import TILE
 from sprite import SpriteObject
-from collections import deque 
+from collections import deque
 import pygame
 from numba.core import types
 from numba.typed import Dict
@@ -54,3 +54,5 @@ for j, row in enumerate(matrix_map):
         if char:
             collision_walls.append(pygame.Rect(i * TILE, j * TILE, TILE, TILE))
             world_map[(i * TILE, j * TILE)] = char
+
+simpl_map = [[0 if not matrix_map[j][e] else -1 for e in range(len(matrix_map[0]))] for j in range(len(matrix_map))]
