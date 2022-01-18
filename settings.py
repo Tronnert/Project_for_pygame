@@ -38,13 +38,19 @@ TEXTURE_SCALE = TEXTURE_WIDTH // TILE // GRAPHICS
 
 # player settings
 player_pos = (2.5 * TILE, 1.5 * TILE)
-print(player_pos, HALF_WIDTH, HALF_HEIGHT)
+#print(player_pos, HALF_WIDTH, HALF_HEIGHT)
 player_angle = 0
 player_speed = 2.5
 SENS = 0.004
 SIDE = 50
 
 DAMAGE = 50
+
+
+# Enemy settings
+DETECT_RAD = 5
+SPEED = 4
+ENEMY_DAM = 10
 
 # colors
 WHITE = (255, 255, 255)
