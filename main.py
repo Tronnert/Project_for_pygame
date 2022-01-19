@@ -320,7 +320,7 @@ def win():
 def history():
     w = open("stats.txt", mode="r")
     text = w.readlines()
-    print(text)
+    # print(text)
     da = [font.render(e.strip(), True, (255, 255, 255)) for e in text]
     rects_of_butt_1 = [pygame.Rect(100, 100, 160, 40)]
     while True:
@@ -548,8 +548,8 @@ while True:
     if hp.check_death():
         death()
         setin.__init__()
-        enemies = [Enemy(*e, hp) for e in enemies_args]
         hp = HP()
+        enemies = [Enemy(*e, hp) for e in enemies_args]
         x, y = setin.player_pos
         rect = pygame.Rect(*setin.player_pos, setin.SIDE, setin.SIDE)
         level.__init__(other_spr, enemies, balls, collision_walls, world_map, matrix_map, min_map_col, simpl_map)
@@ -561,8 +561,8 @@ while True:
         flag[1] = False
         win()
         setin.__init__()
-        enemies = [Enemy(*e, hp) for e in enemies_args]
         hp = HP()
+        enemies = [Enemy(*e, hp) for e in enemies_args]
         x, y = setin.player_pos
         rect = pygame.Rect(*setin.player_pos, setin.SIDE, setin.SIDE)
         level.__init__(other_spr, enemies, balls, collision_walls, world_map, matrix_map, min_map_col, simpl_map)
