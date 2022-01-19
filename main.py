@@ -1,28 +1,52 @@
 import pygame
 from collections import deque
-from settings import *
+import math
+from settings import Settings
 #from player import Player
 from sprite import SpriteObject
 from rays import ray_casting_walls
 from level1 import collision_walls, world_map, matrix_map, simpl_map
+from level2 import collision_walls_2, world_map_2, matrix_map_2, simpl_map_2
 #from drawing import Drawing
 from wave import get_path
 
-
-class Barrel(SpriteObject):
+class Portal(SpriteObject):
     def __init__(self, x, y, scale, sh, side):
         super().__init__({
-                'sprite': pygame.image.load('sprites/barrel/base/0.png').convert_alpha(),
+                'sprite': pygame.image.load('sprites/portal/base/0.png').convert_alpha(),
                 'viewing_angles': None,
                 'shift': sh,
                 'scale': scale,
-                'animation': deque(
-                    [pygame.image.load(f'sprites/barrel/anim/{i}.png').convert_alpha() for i in range(12)]),
-                'animation_dist': 800,
-                'animation_speed': 10,
+                'animation': [],
+                'animation_dist': 0,
+                'animation_speed': 0,
                 'blocked': True,
                 'side': side,
-                'anim_dir': 1
+                'anim_dir': 0
+            }, (x, y))
+        self.rect = pygame.Rect(*self.pos, self.side, self.side)
+    #
+    # def object_locate(self, x, y, angle):
+    #     # print(pygame.Rect(x, y, 1, 1).collidelistall([self.rect]), self.rect, x, y)
+    #     # if len(pygame.Rect(x, y, 1, 1).collidelistall([self.rect])):
+    #     #     level.__init__([], [], [], collision_walls_2, world_map_2, matrix_map_2, min_map_col, simpl_map_2)
+    #     #     return False
+    #     return super().object_locate(x, y, angle)
+
+
+class Win(SpriteObject):
+    def __init__(self, x, y, scale, sh, side):
+        super().__init__({
+                'sprite': pygame.image.load('sprites/win/base/0.png').convert_alpha(),
+                'viewing_angles': None,
+                'shift': sh,
+                'scale': scale,
+                'animation': [],
+                'animation_dist': 0,
+                'animation_speed': 0,
+                'blocked': True,
+                'side': side,
+                'anim_dir': 0
             }, (x, y))
 
 
@@ -70,37 +94,38 @@ class Enemy(SpriteObject):
 
     def object_locate(self, x, y, angle):
         # print(x, y, " ", self.x, self.y)
-        x2, y2 = int(x / TILE), int(y / TILE)
-        x1, y1 = int(self.x / TILE), int(self.y / TILE)
+        x2, y2 = int(x / setin.TILE), int(y / setin.TILE)
+        x1, y1 = int(self.x / setin.TILE), int(self.y / setin.TILE)
         if not self.animation_count < self.animation_speed:
             self.an -= 1
             if self.att and self.an == 0:
                 self.att = False
-            if self.att and self.an == 0 and ((x2 == x1 and y2 == y1) or (x2 - 1 == x1 and y2 == y1) or (x2 + 1 == x1 and y2 == y1)
-                or (x2 == x1 and y2 - 1 == y1) or (x2 == x1 and y2 + 1 == y1)):
-                #print(1, 1, 1, 1, 1, 1, sep="\n")
-                self.att = False
-                self.player_hp.get_dam(ENEMY_DAM)
+                if ((x2 == x1 and y2 == y1) or (x2 - 1 == x1 and y2 == y1) or (x2 + 1 == x1 and y2 == y1)
+                    or (x2 == x1 and y2 - 1 == y1) or (x2 == x1 and y2 + 1 == y1)):
+                    # print(1, 1, 1, 1, 1, 1, sep="\n")
+                    # print()
+                    self.att = False
+                    self.player_hp.get_dam(setin.ENEMY_DAM)
         if self.an <= 0 and not self.att:
             self.att = False
             self.animation = self.noth_an
             if self.way:
                 self.animation = self.walk_an
-                dx = self.way[0][0] * TILE - (self.x - self.side // 2)
-                dy = self.way[0][1] * TILE - (self.y - self.side // 2)
+                dx = self.way[0][0] * setin.TILE - (self.x - self.side // 2)
+                dy = self.way[0][1] * setin.TILE - (self.y - self.side // 2)
                 # print(dx, dy, self.x, self.y, self.way)
                 # print(dx, dy, dx / ((abs(dx) ** 2 + abs(dy) ** 2) * 0.5), dy / ((abs(dx) ** 2 + abs(dy) ** 2) * 0.5))
-                if abs(dx) <= SPEED and abs(dy) <= SPEED:
+                if abs(dx) <= setin.SPEED and abs(dy) <= setin.SPEED:
                     #print("hhhh", self.way[1:])
-                    self.x, self.y = self.way[0][0] * TILE, self.way[0][1] * TILE
+                    self.x, self.y = self.way[0][0] * setin.TILE, self.way[0][1] * setin.TILE
                     self.way = self.way[1:]
-                    dx = self.way[0][0] * TILE - (self.x - self.side // 2)
-                    dy = self.way[0][1] * TILE - (self.y - self.side // 2)
-                if abs(dx) >= SPEED:
-                    self.x += SPEED * (dx // abs(dx))
+                    dx = self.way[0][0] * setin.TILE - (self.x - self.side // 2)
+                    dy = self.way[0][1] * setin.TILE - (self.y - self.side // 2)
+                if abs(dx) >= setin.SPEED:
+                    self.x += setin.SPEED * (dx // abs(dx))
                     #print("x", 10 * (dx // abs(dx)), self.x, self.y)
-                if abs(dy) >= SPEED:
-                    self.y += SPEED * (dy // abs(dy))
+                if abs(dy) >= setin.SPEED:
+                    self.y += setin.SPEED * (dy // abs(dy))
                     #print("y", 10 * (dy // abs(dy)), self.x, self.y)
                 #print("ll", self.x, self.y)
                 # self.x += dx / ((abs(dx) ** 2 + abs(dy) ** 2) * 0.5) * 200
@@ -120,8 +145,8 @@ class Enemy(SpriteObject):
 
     def move(self, pos):
         #print(pos, self.x, self.y, "#########################################")
-        x2, y2 = int(pos[0] / TILE), int(pos[1] / TILE)
-        x1, y1 = int(self.x / TILE), int(self.y / TILE)
+        x2, y2 = int(pos[0] / setin.TILE), int(pos[1] / setin.TILE)
+        x1, y1 = int(self.x / setin.TILE), int(self.y / setin.TILE)
         self.way = get_path(x1, y1, x2, y2, level.simple_map)
         if ((x2 == x1 and y2 == y1) or (x2 - 1 == x1 and y2 == y1) or (x2 + 1 == x1 and y2 == y1)
                 or (x2 == x1 and y2 - 1 == y1) or (x2 == x1 and y2 + 1 == y1)) and not self.att and not self.go_death and not self.way and self.an <= 0:
@@ -168,7 +193,7 @@ class Ball(SpriteObject):
             for hit_index in hit_indexes:
                 if hit_index > len(level.collision_walls) - 1:
                     if isinstance(level.blocked[hit_index - len(level.collision_walls)], Enemy):
-                        level.blocked[hit_index - len(level.collision_walls)].attacked(DAMAGE)
+                        level.blocked[hit_index - len(level.collision_walls)].attacked(setin.DAMAGE)
             self.death = True
         self.x += dx  # 0 1 2 3 4 5
         self.y += dy
@@ -189,6 +214,14 @@ def detect_collision(dx, dy, rect):
         delta_x, delta_y = 0, 0
         for hit_index in hit_indexes:
             hit_rect = level.collision_list[hit_index]
+            if hit_index > len(level.collision_walls) - 1:
+                if isinstance(level.blocked[hit_index - len(level.collision_walls)], Portal):
+                    level.__init__([Win(5.5, 5.5, 1, -0.2, 100)], [], [], collision_walls_2, world_map_2, matrix_map_2, min_map_col, simpl_map_2)
+                    flag[0] = True
+                    return 0, 0
+                elif isinstance(level.blocked[hit_index - len(level.collision_walls)], Win):
+                    flag[1] = True
+                    return 0, 0
             if dx > 0:
                 delta_x += next_rect.right - hit_rect.left
             else:
@@ -218,7 +251,10 @@ def menu():
     x, y = 100, 100
     rects_of_butt = [pygame.Rect(x, y + e * 100, 160, 40) for e in range(1, 4)]
     a = 0
+    leave = False
     while True:
+        if leave:
+            break
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 exit()
@@ -228,24 +264,83 @@ def menu():
             hit_indexes = pygame.Rect(*pygame.mouse.get_pos(), 1, 1).collidelistall(rects_of_butt)
             if hit_indexes:
                 if hit_indexes[0] == 0:
-                    pygame.mouse.set_pos(HALF_WIDTH, HALF_WIDTH)
-                    break
+                    pygame.mouse.set_pos(setin.HALF_WIDTH, setin.HALF_HEIGHT)
+                    leave = True
                 if hit_indexes[0] == 2:
                     exit()
+                if hit_indexes[0] == 1:
+                    history()
         a += 1
         if a > 4:
             anim.rotate(-1)
             a = 0
-        sc.fill(DARKGRAY)
+        sc.fill(setin.DARKGRAY)
         for e in range(1, 4):
             sc.blit(textures['butt' + str(e)], (x, y + 100 * e))
 
         sc.blit(pygame.transform.scale(anim[0], (66 * 4, 103 * 4)), (300, 200))
         sc.blit(pygame.transform.scale(anim[0], (66 * 4, 103 * 4)), (600, 200))
         sc.blit(pygame.transform.scale(anim[0], (66 * 4, 103 * 4)), (900, 200))
+        if leave:
+            sc.blit(textures['load'], (0, 0))
         pygame.display.flip()
-        clock.tick(FPS)
+        clock.tick(setin.FPS)
     pygame.mouse.set_visible(False)
+
+
+def death():
+    w = open("stats.txt", mode="r")
+    text = w.read()
+    text += "\n" + "/".join(list(map(str, count)) + ["смерть"])
+    w = open("stats.txt", mode="w")
+    w.write(text)
+    count[:] = [0, 0]
+    sc.blit(textures['death'], (0, 0))
+    x = 0
+    while x < setin.FPS * 5:
+        x += 1
+        pygame.display.flip()
+        clock.tick(setin.FPS)
+
+def win():
+    w = open("stats.txt", mode="r")
+    text = w.read()
+    text += "\n" + "/".join(list(map(str, count)) + ["победа!"])
+    w = open("stats.txt", mode="w")
+    w.write(text)
+    count[:] = [0, 0]
+    sc.blit(textures['win'], (0, 0))
+    x = 0
+    while x < setin.FPS * 5:
+        x += 1
+        pygame.display.flip()
+        clock.tick(setin.FPS)
+
+
+def history():
+    w = open("stats.txt", mode="r")
+    text = w.readlines()
+    print(text)
+    da = [font.render(e.strip(), True, (255, 255, 255)) for e in text]
+    rects_of_butt_1 = [pygame.Rect(100, 100, 160, 40)]
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                exit()
+        click = pygame.mouse.get_pressed()
+        if click[0]:
+            #print("kkk", click)
+            hit_indexes = pygame.Rect(*pygame.mouse.get_pos(), 1, 1).collidelistall(rects_of_butt_1)
+            #print(hit_indexes )
+            if hit_indexes:
+                #print("88")
+                return
+        sc.fill(setin.BLACK)
+        sc.blit(textures['butt3'], (100, 100))
+        for e in range(len(da)):
+            sc.blit(da[e], (400, 100 + 75 * e))
+        pygame.display.flip()
+        clock.tick(setin.FPS)
 
 
 class Now:
@@ -264,8 +359,12 @@ class Now:
         self.simple_map = simple_map
 
     def check_death(self):
+        x = len(self.enemies)
         self.enemies = [e for e in self.enemies if not e.death]
+        count[0] += x - len(self.enemies)
+        x = len(self.balls)
         self.balls = [e for e in self.balls if not e.death]
+        count[1] += x - len(self.balls)
         self.collision_sprites = [pygame.Rect(*obj.pos, obj.side, obj.side) for obj in
                                   self.other_spr + self.enemies + self.balls if obj.blocked]
         self.blocked = [e for e in self.other_spr + self.enemies + self.balls if e.blocked]
@@ -288,13 +387,14 @@ class HP:
         self.hp -= dam
 
     def check_death(self):
-        return self.hp > 0
+        return self.hp <= 0
 
-
+setin = Settings()
 hp = HP()
 
 pygame.init()
-sc = pygame.display.set_mode((WIDTH, HEIGHT))
+sc = pygame.display.set_mode((setin.WIDTH, setin.HEIGHT))
+
 pygame.mouse.set_visible(False)
 
 barrels = [
@@ -302,30 +402,32 @@ barrels = [
     # Barrel(5.9, 2.1, 0.4, 1.8, 40),
     # Barrel(1.2, 1.2, 0.6, 1, 60),
 ]
-enemies = [Enemy(6.5, 2.1, 1.2, -0.1, 60, hp)]
-
-
+enemies_args = [(6.5, 2.1, 1.2, -0.1, 60), (7.5, 5.5, 1.2, -0.1, 60), (2.5, 11.5, 1.2, -0.1, 60),
+                (11.5, 10.5, 1.2, -0.1, 60), (21.5, 2.5, 1.2, -0.1, 60), (10.5, 5.5, 1.2, -0.1, 60),
+                (15.5, 5.5, 1.2, -0.1, 60), (22.5, 9.5, 1.2, -0.1, 60), (16.5, 11.5, 1.2, -0.1, 60)]
+enemies = [Enemy(*e, hp) for e in enemies_args]
 
 balls = []
 
-other_spr = barrels
+other_spr = [Portal(22.5, 1.5, 1, -0.2, 100)]
 
 # sprites = Sprites()
 clock = pygame.time.Clock()
-x, y = player_pos
+x, y = setin.player_pos
 # print(x, y)
 
-rect = pygame.Rect(*player_pos, SIDE, SIDE)
+rect = pygame.Rect(*setin.player_pos, setin.SIDE, setin.SIDE)
 # collision_sprites = [pygame.Rect(*obj.pos, obj.side, obj.side) for obj in
 #                                   all_spr if obj.blocked]
 # blocked = [e for e in all_spr if e.blocked]
 # collision_list = collision_walls + collision_sprites
-min_map_col = {2: BLACK, False: WHITE}
+min_map_col = {2: setin.BLACK, False: setin.WHITE, 1: setin.BLACK}
 level = Now(other_spr, enemies, balls, collision_walls, world_map, matrix_map, min_map_col, simpl_map)
 #player = Player(sprites)
 #drawing = Drawing(sc, sc_map)
 # print(get_path(2, 1, 5, 2, level.simple_map))
-textures = {1: pygame.image.load('img/wall3.png').convert(),
+flag = [False, False]
+textures = {1: pygame.image.load('img/wall_2_1.png').convert(),
             2: pygame.image.load('img/wall_2_2.png').convert(),
             #3: pygame.image.load('img/wall5.png').convert(),
             #4: pygame.image.load('img/wall6.png').convert(),
@@ -333,11 +435,14 @@ textures = {1: pygame.image.load('img/wall3.png').convert(),
             'butt1': pygame.image.load('img/butt1.png').convert(),
             'butt2': pygame.image.load('img/butt2.png').convert(),
             'butt3': pygame.image.load('img/butt3.png').convert(),
+            'load': pygame.image.load('img/load.png').convert(),
+            'death': pygame.image.load('img/death.png').convert(),
+            'win': pygame.image.load('img/win.png').convert(),
             }
 
 font = pygame.font.SysFont('arial', 50)
 
-
+count = [0, 0]
 
 attack_loc = 60
 max_attacl_loc = attack_loc
@@ -350,48 +455,52 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             exit()
-    sin_a = math.sin(player_angle)
-    cos_a = math.cos(player_angle)
+    sin_a = math.sin(setin.player_angle)
+    cos_a = math.cos(setin.player_angle)
     keys = pygame.key.get_pressed()
     dx, dy = 0, 0
     if keys[pygame.K_ESCAPE]:
         menu()
         attack_loc = max_attacl_loc - 1
     if keys[pygame.K_w]:
-        dx = player_speed * cos_a
-        dy = player_speed * sin_a
+        dx = setin.player_speed * cos_a
+        dy = setin.player_speed * sin_a
         dx, dy = detect_collision(dx, dy, rect)
         x += dx
         y += dy
     if keys[pygame.K_s]:
-        dx = -player_speed * cos_a
-        dy = -player_speed * sin_a
+        dx = -setin.player_speed * cos_a
+        dy = -setin.player_speed * sin_a
         dx, dy = detect_collision(dx, dy, rect)
         x += dx
         y += dy
     if keys[pygame.K_a]:
-        dx = player_speed * sin_a
-        dy = -player_speed * cos_a
+        dx = setin.player_speed * sin_a
+        dy = -setin.player_speed * cos_a
         dx, dy = detect_collision(dx, dy, rect)
         x += dx
         y += dy
     if keys[pygame.K_d]:
-        dx = -player_speed * sin_a
-        dy = player_speed * cos_a
+        dx = -setin.player_speed * sin_a
+        dy = setin.player_speed * cos_a
         dx, dy = detect_collision(dx, dy, rect)
         x += dx
         y += dy
     if keys[pygame.K_LEFT]:
-        player_angle -= 0.02
+        setin.player_angle -= 0.02
     if keys[pygame.K_RIGHT]:
-        player_angle += 0.02
+        setin.player_angle += 0.02
     if pygame.mouse.get_focused():
-        difference = pygame.mouse.get_pos()[0] - HALF_WIDTH
-        pygame.mouse.set_pos((HALF_WIDTH, HALF_HEIGHT))
-        player_angle += difference * SENS
+        difference = pygame.mouse.get_pos()[0] - setin.HALF_WIDTH
+        pygame.mouse.set_pos((setin.HALF_WIDTH, setin.HALF_HEIGHT))
+        setin.player_angle += difference * setin.SENS
+    if flag[0]:
+        flag[0] = False
+        x, y = 1.5 * setin.TILE, 1.5 * setin.TILE
+
     click = pygame.mouse.get_pressed()
     if click[0] and attack_loc == max_attacl_loc:
-        level.balls.append(Ball(x / TILE, y / TILE, 0.7, 0, 30, player_angle))
+        level.balls.append(Ball(x / setin.TILE, y / setin.TILE, 0.7, 0, 30, setin.player_angle))
         # for e in enemies:
         #     e.attacked(10)
         attack_loc -= 1
@@ -400,21 +509,21 @@ while True:
         if attack_loc < 0:
             attack_loc = max_attacl_loc
     rect.center = x, y
-    player_angle %= DOUBLE_PI
+    setin.player_angle %= setin.DOUBLE_PI
 
     level.check_death()
 
     # player.movement()wwwwwwwwwwwwwwwww
-    sc.fill(BLACK)
+    sc.fill(setin.BLACK)
 
-    sky_offset = -10 * math.degrees(player_angle) % WIDTH
+    sky_offset = -10 * math.degrees(setin.player_angle) % setin.WIDTH
     sc.blit(textures['S'], (sky_offset, 0))
-    sc.blit(textures['S'], (sky_offset - WIDTH, 0))
-    sc.blit(textures['S'], (sky_offset + WIDTH, 0))
-    pygame.draw.rect(sc, DARKGRAY, (0, HALF_HEIGHT, WIDTH, HALF_HEIGHT))
+    sc.blit(textures['S'], (sky_offset - setin.WIDTH, 0))
+    sc.blit(textures['S'], (sky_offset + setin.WIDTH, 0))
+    pygame.draw.rect(sc, setin.DARKGRAY, (0, setin.HALF_HEIGHT, setin.WIDTH, setin.HALF_HEIGHT))
     # drawing.background(player.angle)
-    walls = ray_casting_walls((x, y), player_angle, textures, level.world_map)
-    located = [obj.object_locate(x, y, player_angle) for obj in level.all_spr()]
+    walls = ray_casting_walls((x, y), setin.player_angle, textures, level.world_map)
+    located = [obj.object_locate(x, y, setin.player_angle) for obj in level.all_spr()]
     #print(walls)
     for obj in sorted(walls + located, key=lambda n: n[0], reverse=True):
         if obj[0]:
@@ -425,17 +534,43 @@ while True:
     # drawing.mini_map(player)
     for e in range(len(level.matrix_map[0])):
         for j in range(len(level.matrix_map)):
-            pygame.draw.rect(sc, level.min_map_col[level.matrix_map[j][e]], (WIDTH - 10 * len(level.matrix_map[0]) + 10 * e,
+            pygame.draw.rect(sc, level.min_map_col[level.matrix_map[j][e]], (setin.WIDTH - 10 * len(level.matrix_map[0]) + 10 * e,
                                                                  10 * j, 10, 10), 0)
             #pygame.draw.re
-    pygame.draw.rect(sc, GRAY, (WIDTH + int(x / TILE) * 10 - 10 * len(level.matrix_map[0]), int(y / TILE) * 10, 10, 10), 0)
-    pygame.draw.rect(sc, BLACK, (10, HEIGHT - 60, 305, 45), 5)
-    pygame.draw.rect(sc, RED, (15, HEIGHT - 55, hp.hp * 3 - 5, 35), 0)
-    print(hp.hp)
+    pygame.draw.rect(sc, setin.GRAY, (setin.WIDTH + int(x / setin.TILE) * 10 - 10 * len(level.matrix_map[0]), int(y / setin.TILE) * 10, 10, 10), 0)
+    pygame.draw.rect(sc, setin.BLACK, (10, setin.HEIGHT - 60, 305, 45), 5)
+    pygame.draw.rect(sc, setin.RED, (15, setin.HEIGHT - 55, hp.hp * 3 - 5, 35), 0)
+    #print(hp.hp)
     for e in level.balls:
         e.move()
     for e in level.enemies:
         e.move((x, y))
+    if hp.check_death():
+        death()
+        setin.__init__()
+        enemies = [Enemy(*e, hp) for e in enemies_args]
+        hp = HP()
+        x, y = setin.player_pos
+        rect = pygame.Rect(*setin.player_pos, setin.SIDE, setin.SIDE)
+        level.__init__(other_spr, enemies, balls, collision_walls, world_map, matrix_map, min_map_col, simpl_map)
+        attack_loc = 60
+        max_attacl_loc = attack_loc
+        attack_loc -= 1
+        menu()
+    if flag[1]:
+        flag[1] = False
+        win()
+        setin.__init__()
+        enemies = [Enemy(*e, hp) for e in enemies_args]
+        hp = HP()
+        x, y = setin.player_pos
+        rect = pygame.Rect(*setin.player_pos, setin.SIDE, setin.SIDE)
+        level.__init__(other_spr, enemies, balls, collision_walls, world_map, matrix_map, min_map_col, simpl_map)
+        attack_loc = 60
+        max_attacl_loc = attack_loc
+        attack_loc -= 1
+        menu()
+
     # all_spr = [e for e in all_spr if not e.death]
     # balls = [e for e in balls if not e.death]
     # #print(all_spr)
@@ -449,4 +584,5 @@ while True:
     #print((int(x / TILE) * 10, int(y / TILE) * 10, 10, 10))
     #print(WIDTH + int(x / TILE) * 10 - 10 * len(matrix_map[0]), int(y / TILE) * 10)
     pygame.display.flip()
-    clock.tick(FPS)
+    clock.tick(setin.FPS)
+
